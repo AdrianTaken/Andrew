@@ -2,92 +2,152 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Reflection;
+using System.Text;
 using System.Xml;
 using System.Collections.Generic;
 using System.IO.Compression;
 
-
-namespace HelloApp
+namespace OS_Lab1
 {
-    class Student
+    class User
     {
         public string Name { get; set; }
         public int Age { get; set; }
-
     }
-
-    class Programm
+    class Program
     {
-        static void Main(string[] args)
+        static string path = @"C:\Documents";
+        public static async Task Main(string[] args)
         {
-            DriveInfo[] drives = DriveInfo.GetDrives();
-
-            foreach (DriveInfo drive in drives)
-            //задание номер 1
+        mark:
+            Console.WriteLine("Выберите номер задания от 1 до 5: ");
+            string choice = Console.ReadLine();
+            switch (choice)
             {
-                Console.WriteLine($"Название диска: {drive.Name}");
-                Console.WriteLine($"Тип диска : {drive.DriveType}");
-                Console.WriteLine($"Объем диска(байт): {drive.TotalSize}");
-                Console.WriteLine($"Метка диска: {drive.VolumeLabel}");
+                case "1":
+                    First();
+                    goto mark;
+                case "2":
+                    Second();
+                    goto mark;
+                case "3":
+                    await Third(args);
+                    goto mark;
+                case "4":
+                    Fourth();
+                    goto mark;
+                case "5":
+                    Fifth();
+                    goto mark;
+                default:
+                    break;
 
             }
-            //задание номер 2
-            string path = @"C:\csharp";
-            DirectoryInfo dirInfo = new DirectoryInfo(path);
-            if (!dirInfo.Exists)
+            //1 задание
+            static void First()
             {
-                dirInfo.Create();
+                DriveInfo[] drives = DriveInfo.GetDrives();
+
+                foreach (DriveInfo drive in drives)
+                {
+                    Console.WriteLine($"Название: {drive.Name}");
+                    if (drive.IsReady)
+                    {
+                        Console.WriteLine($"Объем диска: {drive.TotalSize}");
+                        Console.WriteLine($"Свободное пространство: {drive.TotalFreeSpace}");
+                        Console.WriteLine($"Метка диска: {drive.VolumeLabel}");
+                        Console.WriteLine($"Тип диска: {drive.DriveType}");
+                    }
+                    Console.WriteLine();
+                }
             }
-
-            Console.WriteLine("Введите строку для записи в файл:");
-            string text = Console.ReadLine();
-
-            // запись в файл
-            using (FileStream fstream = new FileStream($"{path}/note.txt", FileMode.OpenOrCreate))
+            //2 задание
+            static void Second()
             {
-                // преобразуем строку в байты
-                byte[] array = System.Text.Encoding.Default.GetBytes(text);
-                // запись массива байтов в файл
-                fstream.Write(array, 0, array.Length);
-                Console.WriteLine("Текст записан в файл");
-            }
 
-            // чтение из файла
-            using (FileStream fstream = File.OpenRead($"{path}/note.txt"))
+
+                DirectoryInfo dirInfo = new DirectoryInfo(path);
+                if (!dirInfo.Exists)
+                {
+                    dirInfo.Create();
+                }
+                Console.WriteLine("Введите строку для записи в файл:");
+                string text = Console.ReadLine();
+
+
+                using (FileStream fstream = new FileStream($"{path}\\note.txt", FileMode.OpenOrCreate))
+                {
+                    byte[] array = System.Text.Encoding.Default.GetBytes(text);
+                    fstream.Write(array, 0, array.Length);
+                    Console.WriteLine("Текст записан в файл");
+                }
+
+                // чтение из файла
+                using (FileStream fstream = File.OpenRead($"{path}\\note.txt"))
+                {
+                    byte[] array = new byte[fstream.Length];
+                    fstream.Read(array, 0, array.Length);
+                    string textFromFile = System.Text.Encoding.Default.GetString(array);
+                    Console.WriteLine($"Текст из файла: {textFromFile}");
+                }
+
+                // удаление файла
+                Console.Write("Удалить Файл?: Да - 1 / Нет - 0\n");
+                int YesNo = Convert.ToInt32(Console.ReadLine());
+                if (YesNo == 1)
+                {
+                    File.Delete($"{path}\\note.txt");
+                    Console.WriteLine("Файл удалён");
+                }
+                else if (YesNo == 0)
+                {
+                    Console.ReadLine();
+                }
+            }
+            //3 задание
+            static async Task Third(string[] args)
             {
-                // преобразуем строку в байты
-                byte[] array = new byte[fstream.Length];
-                // считываем данные
-                fstream.Read(array, 0, array.Length);
 
+                // сохранение данных
+                using (FileStream fs = new FileStream($"{path}\\user.json", FileMode.OpenOrCreate))
+                {
+                    User tom = new User() { Name = "Tom", Age = 35 };
+                    await JsonSerializer.SerializeAsync<User>(fs, tom);
+                    Console.WriteLine("Data has been saved to file");
+                }
+
+                // чтение данных
+                using (FileStream fs = new FileStream($"{path}\\user.json", FileMode.OpenOrCreate))
+                {
+                    User restoredPerson = await JsonSerializer.DeserializeAsync<User>(fs);
+                    Console.WriteLine($"Name: {restoredPerson.Name}  Age: {restoredPerson.Age}");
+                }
+
+                // удаление файла
+                Console.Write("Удалить Файл?: Да - 1 / Нет - 0\n");
+                int YesNo = Convert.ToInt32(Console.ReadLine());
+                if (YesNo == 1)
+                {
+                    File.Delete($"{path}\\user.json");
+                    Console.WriteLine("Файл удалён");
+                }
+                else if (YesNo == 0)
+                {
+                    Console.ReadLine();
+                }
             }
-            string surfile = @"C:\csharp\note.txt";
-            Console.WriteLine(File.Exists(surfile) ? "Файл существует" : "Файл не существует");
+            //4 задание
+
+            static void Fourth()
             {
-                File.Delete(surfile);
-                Console.WriteLine("Файл удалён");
-            }
-            //Задание номер 3
-            Student tom = new Student { Name = "Andrey", Age = 19 };
-            string fileName = "Student.json";
-            string json = JsonSerializer.Serialize<Student>(tom);
-            File.WriteAllText(fileName, json);
-            Console.WriteLine(json);
-            Student restoredStudent = JsonSerializer.Deserialize<Student>(json);
 
-            string jsfile = @"C:\Users\tsapi\source\repos\lab1 OS\lab1 OS\bin\Debug\netcoreapp3.1\Student.json";
-            Console.WriteLine(File.Exists(jsfile) ? "Файл существует" : "Файл не существует");
-            {
-                File.Delete(jsfile);
-                Console.WriteLine("Файл удалён");
-            }
-            //Задание номер 4
-            List<Student> users = new List<Student>();
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(@"C:\Users\tsapi\source\repos\lab1 OS\lab1 OS\bin\Debug\netcoreapp3.1\users.xml");
-            XmlElement xRoot = xDoc.DocumentElement;
+                List<User> users = new List<User>();
+                XmlDocument xDoc = new XmlDocument();
+                xDoc.Load($"{path}\\users.xml");
+                XmlElement xRoot = xDoc.DocumentElement;
 
-                // создаем новый элемент student
+                // создаем новый элемент user
                 XmlElement userElem = xDoc.CreateElement("user");
                 XmlAttribute nameAttr = xDoc.CreateAttribute("name");
                 XmlElement ageElem = xDoc.CreateElement("age");
@@ -105,83 +165,106 @@ namespace HelloApp
                 userElem.Attributes.Append(nameAttr);
                 userElem.AppendChild(ageElem);
                 xRoot.AppendChild(userElem);
-                xDoc.Save("users.xml");
+                xDoc.Save($"{path}\\users.xml");
                 Console.WriteLine("Данные сохранены");
                 //Вывод данных
                 Console.WriteLine("Вывод данных");
-            foreach (XmlElement xnode in xRoot)
-            {
-                Student user = new Student();
-                XmlNode attr = xnode.Attributes.GetNamedItem("name");
-                if (attr != null)
-                    user.Name = attr.Value;
-
-                foreach (XmlNode childnode in xnode.ChildNodes)
+                foreach (XmlElement xnode in xRoot)
                 {
-                    if (childnode.Name == "age")
-                        user.Age = Int32.Parse(childnode.InnerText);
-                }
-                users.Add(user);
-            }
-            foreach (Student u in users)
-                Console.WriteLine($"Имя: {u.Name} Возраст: {u.Age}");
-            Console.ReadLine();
+                    User user = new User();
+                    XmlNode attr = xnode.Attributes.GetNamedItem("name");
+                    if (attr != null)
+                        user.Name = attr.Value;
 
-            // удаление файла
-            string xmlfile = @"C:\Users\tsapi\source\repos\lab1 OS\lab1 OS\bin\Debug\netcoreapp3.1\users.xml";
-            Console.WriteLine(File.Exists(xmlfile) ? "Файл существует" : "Файл не существует");
-            {
-                File.Delete(xmlfile);
-                Console.WriteLine("Файл удалён");
-            }
-            //Задание номер 5
-            string sourceFile = @"C:\csharp\user.txt";
-            string compressedFile = @"C:\csharp\user.gz";
-            string targetFile = @"C:\csharp\user_new.txt";
-
-            Compress(sourceFile, compressedFile);
-
-            Decompress(compressedFile, targetFile);
-            Console.ReadLine();
-
-            // удаление файла
-            File.Delete(@"C:\csharp\user_new.txt");
-            File.Delete(@"C:\csharp\user.gz");
-            Console.WriteLine("Файлы удалены");
-            Console.ReadLine();
-        }
-
-        static void Compress(string sourceFile, string compressedFile)
-        {
-            using (FileStream sourceStream = new FileStream(sourceFile, FileMode.OpenOrCreate))
-            {
-                using (FileStream targetStream = File.Create(compressedFile))
-                {
-                    using (GZipStream compressionStream = new GZipStream(targetStream, CompressionMode.Compress))
+                    foreach (XmlNode childnode in xnode.ChildNodes)
                     {
-                        sourceStream.CopyTo(compressionStream);
-                        Console.WriteLine("Сжатие файла {0} завершено. Исходный размер: {1}  сжатый размер: {2}.",
-                            sourceFile, sourceStream.Length.ToString(), targetStream.Length.ToString());
+                        if (childnode.Name == "age")
+                            user.Age = Int32.Parse(childnode.InnerText);
+                    }
+                    users.Add(user);
+                }
+                foreach (User u in users)
+                    Console.WriteLine($"Имя: {u.Name} Возраст: {u.Age}");
+
+                // удаление файла
+                Console.Write("Удалить Файл?: Да - 1 / Нет - 0\n");
+                int YesNo = Convert.ToInt32(Console.ReadLine());
+                if (YesNo == 1)
+                {
+                    File.Delete($"{path}\\users.xml");
+                    Console.WriteLine("Файл удалён");
+                }
+                else if (YesNo == 0)
+                {
+                    Console.ReadLine();
+                }
+            }
+
+
+            //5 задание
+            static void Fifth()
+            {
+                string sourceFile = @"C:\Documents\user.txt";
+                string compressedFile = @"C:\Documents\user.gz";
+                string targetFile = @"C:\Documents\user_new.txt";
+
+                Compress(sourceFile, compressedFile);
+
+                Decompress(compressedFile, targetFile);
+                Console.ReadLine();
+
+                // удаление файла
+                Console.Write("Удалить Файл?: Да - 1 / Нет - 0\n");
+                int YesNo = Convert.ToInt32(Console.ReadLine());
+                if (YesNo == 1)
+                {
+                    File.Delete(@"C:\Documents\user_new.txt");
+                    File.Delete(@"C:\Documents\user.gz");
+                    Console.WriteLine("Файлы удалены");
+                }
+                else if (YesNo == 0)
+                {
+                    Console.ReadLine();
+                }
+            }
+
+            static void Compress(string sourceFile, string compressedFile)
+            {
+                using (FileStream sourceStream = new FileStream(sourceFile, FileMode.OpenOrCreate))
+                {
+                    using (FileStream targetStream = File.Create(compressedFile))
+                    {
+                        using (GZipStream compressionStream = new GZipStream(targetStream, CompressionMode.Compress))
+                        {
+                            sourceStream.CopyTo(compressionStream);
+                            Console.WriteLine("Сжатие файла {0} завершено. Исходный размер: {1}  сжатый размер: {2}.",
+                                sourceFile, sourceStream.Length.ToString(), targetStream.Length.ToString());
+                        }
+                    }
+                }
+            }
+            ///Разархивирование
+            static void Decompress(string compressedFile, string targetFile)
+            {
+                using (FileStream sourceStream = new FileStream(compressedFile, FileMode.OpenOrCreate))
+                {
+                    using (FileStream targetStream = File.Create(targetFile))
+                    {
+                        using (GZipStream decompressionStream = new GZipStream(sourceStream, CompressionMode.Decompress))
+                        {
+                            decompressionStream.CopyTo(targetStream);
+                            Console.WriteLine("Восстановлен файл: {0}", targetFile);
+                        }
                     }
                 }
             }
         }
-        ///Разархивирование
-        static void Decompress(string compressedFile, string targetFile)
-        {
-            using (FileStream sourceStream = new FileStream(compressedFile, FileMode.OpenOrCreate))
-            {
-                using (FileStream targetStream = File.Create(targetFile))
-                {
-                    using (GZipStream decompressionStream = new GZipStream(sourceStream, CompressionMode.Decompress))
-                    {
-                        decompressionStream.CopyTo(targetStream);
-                        Console.WriteLine("Восстановлен файл: {0}", targetFile);
-                    }
-                }
-            }
-
-        }
-
     }
+
 }
+
+/*Перед выполнением задания 4 создать файл вида:
+<?xml version="1.0" encoding="utf-8"?>
+<users>
+</users> 
+*/

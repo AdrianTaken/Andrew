@@ -90,6 +90,7 @@ namespace OS_Lab1
                     fstream.Read(array, 0, array.Length);
                     string textFromFile = System.Text.Encoding.Default.GetString(array);
                     Console.WriteLine($"Текст из файла: {textFromFile}");
+                    Console.ReadLine();
                 }
 
                 // удаление файла
@@ -122,6 +123,7 @@ namespace OS_Lab1
                 {
                     User restoredPerson = await JsonSerializer.DeserializeAsync<User>(fs);
                     Console.WriteLine($"Name: {restoredPerson.Name}  Age: {restoredPerson.Age}");
+                    Console.ReadLine();
                 }
 
                 // удаление файла
@@ -185,6 +187,7 @@ namespace OS_Lab1
                 }
                 foreach (User u in users)
                     Console.WriteLine($"Имя: {u.Name} Возраст: {u.Age}");
+                Console.ReadLine();
 
                 // удаление файла
                 Console.Write("Удалить Файл?: Да - 1 / Нет - 0\n");
